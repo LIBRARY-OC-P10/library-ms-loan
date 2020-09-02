@@ -9,9 +9,9 @@
 	</parent>
 	<groupId>org.mickael</groupId>
 	<artifactId>library-ms-loan</artifactId>
-	<version>1.0.0.RELEASE</version>
+	<version>1.0.1.RELEASE</version>
 	<name>library-ms-loan</name>
-	<description>Library webapp for OpenClassrooms Project 7</description>
+	<description>Library webapp for OpenClassrooms Project 10</description>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -22,10 +22,10 @@
 	</properties>
 	
 	<scm>
-		<connection>scm:git:https://github.com/LIBRARY-OC-P7/library-ms-loan.git</connection>
-		<developerConnection>scm:git:https://github.com/LIBRARY-OC-P7/library-ms-loan.git</developerConnection>
-		<url>https://github.com/LIBRARY-OC-P7/library-ms-loan</url>
-		<tag>1.0.0.RELEASE</tag>
+		<connection>scm:git:https://github.com/LIBRARY-OC-P10/library-ms-loan.git</connection>
+		<developerConnection>scm:git:https://github.com/LIBRARY-OC-P10/library-ms-loan.git</developerConnection>
+		<url>https://github.com/LIBRARY-OC-P10/library-ms-loan</url>
+		<tag>1.0.1.RELEASE</tag>
 	</scm>
 
 	<dependencies>
