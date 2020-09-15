@@ -3,6 +3,7 @@ package org.mickael.librarymsloan.controller;
 import org.mickael.librarymsloan.exception.LoanNotFoundException;
 import org.mickael.librarymsloan.model.Loan;
 import org.mickael.librarymsloan.proxy.FeignBookProxy;
+import org.mickael.librarymsloan.proxy.FeignReservationProxy;
 import org.mickael.librarymsloan.service.contract.LoanServiceContract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -26,11 +28,13 @@ public class LoanRestController {
     private static final Logger logger = LoggerFactory.getLogger(LoanRestController.class);
     private final LoanServiceContract loanServiceContract;
     private final FeignBookProxy feignBookProxy;
+    private final FeignReservationProxy feignReservationProxy;
 
     @Autowired
-    public LoanRestController(LoanServiceContract loanServiceContract, FeignBookProxy feignBookProxy) {
+    public LoanRestController(LoanServiceContract loanServiceContract, FeignBookProxy feignBookProxy, FeignReservationProxy feignReservationProxy) {
         this.loanServiceContract = loanServiceContract;
         this.feignBookProxy = feignBookProxy;
+        this.feignReservationProxy = feignReservationProxy;
     }
 
     @GetMapping
@@ -58,6 +62,13 @@ public class LoanRestController {
         if (newLoan == null){
             return ResponseEntity.noContent().build();
         }
+        //check if a reservation exist for this book and customer
+        boolean reservationExist = feignReservationProxy.checkIfReservationExist(newLoan.getCustomerId(), newLoan.getBookId());
+
+        //if exist delete the reservation
+        if (reservationExist){
+            feignReservationProxy.deleteReservationAfterLoan(newLoan.getCustomerId(), newLoan.getBookId());
+        }
         Loan loanSaved = loanServiceContract.save(newLoan);
         feignBookProxy.updateLoanCopy(loanSaved.getCopyId(), accessToken);
         URI location = ServletUriComponentsBuilder
@@ -82,6 +93,8 @@ public class LoanRestController {
         try {
             Loan loan = loanServiceContract.returnLoan(id);
             feignBookProxy.updateLoanCopy(loan.getCopyId(), accessToken);
+            //update reservations
+            feignReservationProxy.updateReservation(loan.getBookId());
 
             return loan;
         } catch (LoanNotFoundException ex){
@@ -108,6 +121,8 @@ public class LoanRestController {
     public Loan extendLoan(@PathVariable Integer id){
         try{
             Loan loan = loanServiceContract.extendLoan(id);
+            //update date in reservation
+            feignReservationProxy.updateDateReservation(loan.getBookId());
             return loan;
         } catch (LoanNotFoundException ex){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Provide correct Loan ID", ex);
@@ -124,6 +139,10 @@ public class LoanRestController {
         return loanServiceContract.updateStatus();
     }
 
+    @GetMapping("/book/{bookId}/soon-returned")
+    public List<LocalDate> getSoonReturned(@PathVariable Integer bookId){
+        return loanServiceContract.findSoonestEndingLoan(bookId);
+    }
 
 
 }
