@@ -5,6 +5,7 @@ import org.mickael.librarymsloan.model.Loan;
 import org.mickael.librarymsloan.proxy.FeignBookProxy;
 import org.mickael.librarymsloan.proxy.FeignReservationProxy;
 import org.mickael.librarymsloan.service.contract.LoanServiceContract;
+import org.mickael.librarymsloan.utils.HandlerToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,15 +63,15 @@ public class LoanRestController {
         if (newLoan == null){
             return ResponseEntity.noContent().build();
         }
+        System.out.println("ms loan create : " + accessToken);
         //check if a reservation exist for this book and customer
-        boolean reservationExist = feignReservationProxy.checkIfReservationExist(newLoan.getCustomerId(), newLoan.getBookId());
-
+        boolean reservationExist = feignReservationProxy.checkIfReservationExist(newLoan.getCustomerId(), newLoan.getBookId(), HandlerToken.formatToken(accessToken));
         //if exist delete the reservation
         if (reservationExist){
-            feignReservationProxy.deleteReservationAfterLoan(newLoan.getCustomerId(), newLoan.getBookId());
+            feignReservationProxy.deleteReservationAfterLoan(newLoan.getCustomerId(), newLoan.getBookId(), HandlerToken.formatToken(accessToken));
         }
         Loan loanSaved = loanServiceContract.save(newLoan);
-        feignBookProxy.updateLoanCopy(loanSaved.getCopyId(), accessToken);
+        feignBookProxy.updateLoanCopy(loanSaved.getCopyId(), HandlerToken.formatToken(accessToken));
         URI location = ServletUriComponentsBuilder
                                .fromCurrentRequest()
                                .path("/{id}")
@@ -90,11 +91,12 @@ public class LoanRestController {
     @PutMapping("/return/{id}")
     @ResponseStatus(HttpStatus.OK)
     public Loan returnLoan(@PathVariable Integer id, @RequestHeader("Authorization") String accessToken){
+        System.out.println("access token in loan return : " + accessToken);
         try {
             Loan loan = loanServiceContract.returnLoan(id);
-            feignBookProxy.updateLoanCopy(loan.getCopyId(), accessToken);
+            feignBookProxy.updateLoanCopy(loan.getCopyId(), HandlerToken.formatToken(accessToken));
             //update reservations
-            feignReservationProxy.updateReservation(loan.getBookId());
+            feignReservationProxy.updateReservation(loan.getBookId(), HandlerToken.formatToken(accessToken));
 
             return loan;
         } catch (LoanNotFoundException ex){
@@ -118,11 +120,11 @@ public class LoanRestController {
 
     @GetMapping("/extend/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Loan extendLoan(@PathVariable Integer id){
+    public Loan extendLoan(@PathVariable Integer id, @RequestHeader("Authorization") String accessToken){
         try{
             Loan loan = loanServiceContract.extendLoan(id);
             //update date in reservation
-            feignReservationProxy.updateDateReservation(loan.getBookId());
+            feignReservationProxy.updateDateReservation(loan.getBookId(), HandlerToken.formatToken(accessToken));
             return loan;
         } catch (LoanNotFoundException ex){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Provide correct Loan ID", ex);
