@@ -110,11 +110,7 @@ public class LoanServiceImpl implements LoanServiceContract {
         for (Loan loan : loans){
             localDates.add(loan.getEndingLoanDate());
         }
-        if (!localDates.isEmpty()){
-            return localDates;
-        } else {
-            return null;
-        }
+        return localDates;
     }
 
 
