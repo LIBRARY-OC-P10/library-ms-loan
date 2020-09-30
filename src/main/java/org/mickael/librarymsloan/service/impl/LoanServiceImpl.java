@@ -28,7 +28,7 @@ public class LoanServiceImpl implements LoanServiceContract {
     }
 
     @Override
-    public List<Loan> findAll() throws LoanNotFoundException {
+    public List<Loan> findAll() {
         List<Loan> loans = loanRepository.findAll();
         if (loans.isEmpty()){
             throw new LoanNotFoundException("No loan found");
@@ -37,7 +37,7 @@ public class LoanServiceImpl implements LoanServiceContract {
     }
 
     @Override
-    public Loan findById(Integer id) throws LoanNotFoundException {
+    public Loan findById(Integer id) {
         Optional<Loan> optionalLoan = loanRepository.findById(id);
         if (!optionalLoan.isPresent()){
             throw new LoanNotFoundException("Loan not found in repository");
@@ -60,7 +60,7 @@ public class LoanServiceImpl implements LoanServiceContract {
     }
 
     @Override
-    public Loan update(Loan loan) throws LoanNotFoundException{
+    public Loan update(Loan loan) {
         Optional<Loan> optionalLoan = loanRepository.findById(loan.getId());
         if (!optionalLoan.isPresent()){
             throw new LoanNotFoundException("Loan not found in repository");
@@ -80,7 +80,7 @@ public class LoanServiceImpl implements LoanServiceContract {
     }
 
     @Override
-    public List<Loan> findAllByCustomerId(Integer customerId) throws LoanNotFoundException {
+    public List<Loan> findAllByCustomerId(Integer customerId) {
         List<Loan> loans = loanRepository.findAllByCustomerId(customerId, Sort.by("loanStatus"));
         if (loans.isEmpty()){
             throw new LoanNotFoundException("Loan not found in repository");
@@ -115,7 +115,7 @@ public class LoanServiceImpl implements LoanServiceContract {
 
 
     @Override
-    public Loan extendLoan(Integer id) throws LoanNotFoundException {
+    public Loan extendLoan(Integer id) {
         Optional<Loan> optionalLoan = loanRepository.findById(id);
         if (!optionalLoan.isPresent()){
             throw new LoanNotFoundException("Loan not found in repository");
@@ -146,7 +146,7 @@ public class LoanServiceImpl implements LoanServiceContract {
     }
 
     @Override
-    public Loan returnLoan(Integer id) throws LoanNotFoundException {
+    public Loan returnLoan(Integer id) {
         Optional<Loan> optionalLoan = loanRepository.findById(id);
         if (!optionalLoan.isPresent()){
             throw new LoanNotFoundException("Loan not found in repository");
