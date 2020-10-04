@@ -100,14 +100,19 @@ public class LoanServiceImpl implements LoanServiceContract {
     @Override
     public List<LocalDate> findSoonestEndingLoan(Integer bookId) {
         List<Loan> loans = loanRepository.findAllByBookId(bookId);
+        List<Loan> ongoingLoans = new ArrayList<>();
         for (Loan loan : loans){
-            if (loan.isExtend()){
-                loan.setEndingLoanDate(loan.getExtendLoanDate());
+            if (!loan.getLoanStatus().equalsIgnoreCase("rendu")){
+                if (loan.isExtend()){
+                    loan.setEndingLoanDate(loan.getExtendLoanDate());
+                }
+                ongoingLoans.add(loan);
             }
         }
-        loans.sort(Comparator.comparing(Loan::getEndingLoanDate));
+
+        ongoingLoans.sort(Comparator.comparing(Loan::getEndingLoanDate));
         List<LocalDate> localDates = new ArrayList<>();
-        for (Loan loan : loans){
+        for (Loan loan : ongoingLoans){
             localDates.add(loan.getEndingLoanDate());
         }
         return localDates;
