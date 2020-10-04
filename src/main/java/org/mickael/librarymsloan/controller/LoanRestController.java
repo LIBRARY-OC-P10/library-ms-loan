@@ -63,14 +63,13 @@ public class LoanRestController {
         if (newLoan == null){
             return ResponseEntity.noContent().build();
         }
-        System.out.println("ms loan create : " + accessToken);
+        Loan loanSaved = loanServiceContract.save(newLoan);
         //check if a reservation exist for this book and customer
         boolean reservationExist = feignReservationProxy.checkIfReservationExist(newLoan.getCustomerId(), newLoan.getBookId(), HandlerToken.formatToken(accessToken));
         //if exist delete the reservation
         if (reservationExist){
             feignReservationProxy.deleteReservationAfterLoan(newLoan.getCustomerId(), newLoan.getBookId(), HandlerToken.formatToken(accessToken));
         }
-        Loan loanSaved = loanServiceContract.save(newLoan);
         feignBookProxy.updateLoanCopy(loanSaved.getCopyId(), HandlerToken.formatToken(accessToken));
         URI location = ServletUriComponentsBuilder
                                .fromCurrentRequest()
@@ -91,7 +90,6 @@ public class LoanRestController {
     @PutMapping("/return/{id}")
     @ResponseStatus(HttpStatus.OK)
     public Loan returnLoan(@PathVariable Integer id, @RequestHeader("Authorization") String accessToken){
-        System.out.println("access token in loan return : " + accessToken);
         try {
             Loan loan = loanServiceContract.returnLoan(id);
             feignBookProxy.updateLoanCopy(loan.getCopyId(), HandlerToken.formatToken(accessToken));
