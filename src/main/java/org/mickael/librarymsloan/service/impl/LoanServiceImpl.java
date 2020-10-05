@@ -20,6 +20,7 @@ import java.util.Optional;
 public class LoanServiceImpl implements LoanServiceContract {
 
     private final LoanRepository loanRepository;
+    private static final String NOT_FOUND_MSG = "Loan not found in repository";
 
 
     @Autowired
@@ -31,7 +32,7 @@ public class LoanServiceImpl implements LoanServiceContract {
     public List<Loan> findAll() {
         List<Loan> loans = loanRepository.findAll();
         if (loans.isEmpty()){
-            throw new LoanNotFoundException("No loan found");
+            throw new LoanNotFoundException(NOT_FOUND_MSG);
         }
         return loans;
     }
@@ -40,7 +41,7 @@ public class LoanServiceImpl implements LoanServiceContract {
     public Loan findById(Integer id) {
         Optional<Loan> optionalLoan = loanRepository.findById(id);
         if (!optionalLoan.isPresent()){
-            throw new LoanNotFoundException("Loan not found in repository");
+            throw new LoanNotFoundException(NOT_FOUND_MSG);
         }
         return optionalLoan.get();
     }
@@ -63,7 +64,7 @@ public class LoanServiceImpl implements LoanServiceContract {
     public Loan update(Loan loan) {
         Optional<Loan> optionalLoan = loanRepository.findById(loan.getId());
         if (!optionalLoan.isPresent()){
-            throw new LoanNotFoundException("Loan not found in repository");
+            throw new LoanNotFoundException(NOT_FOUND_MSG);
         }
         if (loan.getLoanStatus().equalsIgnoreCase(LoanStatus.CLOSED.getLabel())){
             Loan savedLoan = optionalLoan.get();
@@ -83,7 +84,7 @@ public class LoanServiceImpl implements LoanServiceContract {
     public List<Loan> findAllByCustomerId(Integer customerId) {
         List<Loan> loans = loanRepository.findAllByCustomerId(customerId, Sort.by("loanStatus"));
         if (loans.isEmpty()){
-            throw new LoanNotFoundException("Loan not found in repository");
+            throw new LoanNotFoundException(NOT_FOUND_MSG);
         }
         return loans;
     }
@@ -92,7 +93,7 @@ public class LoanServiceImpl implements LoanServiceContract {
     public List<Loan> findDelayLoan() {
         List<Loan> loans = loanRepository.findDelayLoan();
         if (loans.isEmpty()){
-            throw new LoanNotFoundException("Loan not found in repository");
+            throw new LoanNotFoundException(NOT_FOUND_MSG);
         }
         return loans;
     }
@@ -123,7 +124,7 @@ public class LoanServiceImpl implements LoanServiceContract {
     public Loan extendLoan(Integer id) {
         Optional<Loan> optionalLoan = loanRepository.findById(id);
         if (!optionalLoan.isPresent()){
-            throw new LoanNotFoundException("Loan not found in repository");
+            throw new LoanNotFoundException(NOT_FOUND_MSG);
         }
         Loan extendLoan = new Loan();
         extendLoan.setId(optionalLoan.get().getId());
@@ -154,7 +155,7 @@ public class LoanServiceImpl implements LoanServiceContract {
     public Loan returnLoan(Integer id) {
         Optional<Loan> optionalLoan = loanRepository.findById(id);
         if (!optionalLoan.isPresent()){
-            throw new LoanNotFoundException("Loan not found in repository");
+            throw new LoanNotFoundException(NOT_FOUND_MSG);
         }
         Loan savedLoan = optionalLoan.get();
         savedLoan.setLoanStatus(LoanStatus.CLOSED.getLabel());
