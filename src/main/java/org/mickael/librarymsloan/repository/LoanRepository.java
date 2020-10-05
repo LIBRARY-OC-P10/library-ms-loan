@@ -28,4 +28,9 @@ public interface LoanRepository extends JpaRepository<Loan, Integer> {
     List<Loan> findAllForUpdateStatus();
 
     List<Loan> findAllByBookId(Integer bookId);
+
+    @Query(value = "SELECT COUNT(loan) FROM Loan loan WHERE (loan.customerId = :customerId " +
+                           "AND loan.bookId = :bookId " +
+                           "AND loan.loanStatus <> 'Rendu')")
+    Integer checkIfLoanExistForCustomerIdAndBookId(Integer customerId, Integer bookId);
 }

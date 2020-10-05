@@ -29,4 +29,6 @@ public interface LoanServiceContract {
     List<Loan> findDelayLoan();
 
     List<LocalDate> findSoonestEndingLoan(Integer bookId);
+
+    boolean checkIfLoanExistForCustomerIdAndBookId(Integer customerId, Integer bookId);
 }

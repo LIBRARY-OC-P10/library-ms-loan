@@ -144,5 +144,9 @@ public class LoanRestController {
         return loanServiceContract.findSoonestEndingLoan(bookId);
     }
 
+    @GetMapping("/customer/{customerId}/book/{bookId}")
+    public boolean checkIfLoanExistForCustomerIdAndBookId(@PathVariable Integer customerId, @PathVariable Integer bookId){
+        return loanServiceContract.checkIfLoanExistForCustomerIdAndBookId(customerId,bookId);
+    }
 
 }

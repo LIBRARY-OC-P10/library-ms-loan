@@ -119,6 +119,16 @@ public class LoanServiceImpl implements LoanServiceContract {
         return localDates;
     }
 
+    @Override
+    public boolean checkIfLoanExistForCustomerIdAndBookId(Integer customerId, Integer bookId) {
+       Integer loan = loanRepository.checkIfLoanExistForCustomerIdAndBookId(customerId,bookId);
+       if (loan != 0){
+           return true;
+       } else {
+           return false;
+       }
+    }
+
 
     @Override
     public Loan extendLoan(Integer id) {
