@@ -3,7 +3,9 @@ package org.mickael.librarymsloan.controller;
 import org.mickael.librarymsloan.exception.LoanNotFoundException;
 import org.mickael.librarymsloan.model.Loan;
 import org.mickael.librarymsloan.proxy.FeignBookProxy;
+import org.mickael.librarymsloan.proxy.FeignReservationProxy;
 import org.mickael.librarymsloan.service.contract.LoanServiceContract;
+import org.mickael.librarymsloan.utils.HandlerToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -26,11 +29,13 @@ public class LoanRestController {
     private static final Logger logger = LoggerFactory.getLogger(LoanRestController.class);
     private final LoanServiceContract loanServiceContract;
     private final FeignBookProxy feignBookProxy;
+    private final FeignReservationProxy feignReservationProxy;
 
     @Autowired
-    public LoanRestController(LoanServiceContract loanServiceContract, FeignBookProxy feignBookProxy) {
+    public LoanRestController(LoanServiceContract loanServiceContract, FeignBookProxy feignBookProxy, FeignReservationProxy feignReservationProxy) {
         this.loanServiceContract = loanServiceContract;
         this.feignBookProxy = feignBookProxy;
+        this.feignReservationProxy = feignReservationProxy;
     }
 
     @GetMapping
@@ -59,7 +64,13 @@ public class LoanRestController {
             return ResponseEntity.noContent().build();
         }
         Loan loanSaved = loanServiceContract.save(newLoan);
-        feignBookProxy.updateLoanCopy(loanSaved.getCopyId(), accessToken);
+        //check if a reservation exist for this book and customer
+        boolean reservationExist = feignReservationProxy.checkIfReservationExist(newLoan.getCustomerId(), newLoan.getBookId(), HandlerToken.formatToken(accessToken));
+        //if exist delete the reservation
+        if (reservationExist){
+            feignReservationProxy.deleteReservationAfterLoan(newLoan.getCustomerId(), newLoan.getBookId(), HandlerToken.formatToken(accessToken));
+        }
+        feignBookProxy.updateLoanCopy(loanSaved.getCopyId(), HandlerToken.formatToken(accessToken));
         URI location = ServletUriComponentsBuilder
                                .fromCurrentRequest()
                                .path("/{id}")
@@ -81,7 +92,9 @@ public class LoanRestController {
     public Loan returnLoan(@PathVariable Integer id, @RequestHeader("Authorization") String accessToken){
         try {
             Loan loan = loanServiceContract.returnLoan(id);
-            feignBookProxy.updateLoanCopy(loan.getCopyId(), accessToken);
+            feignBookProxy.updateLoanCopy(loan.getCopyId(), HandlerToken.formatToken(accessToken));
+            //update reservations
+            feignReservationProxy.updateReservation(loan.getBookId(), HandlerToken.formatToken(accessToken));
 
             return loan;
         } catch (LoanNotFoundException ex){
@@ -105,9 +118,11 @@ public class LoanRestController {
 
     @GetMapping("/extend/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Loan extendLoan(@PathVariable Integer id){
+    public Loan extendLoan(@PathVariable Integer id, @RequestHeader("Authorization") String accessToken){
         try{
             Loan loan = loanServiceContract.extendLoan(id);
+            //update date in reservation
+            feignReservationProxy.updateDateReservation(loan.getBookId(), HandlerToken.formatToken(accessToken));
             return loan;
         } catch (LoanNotFoundException ex){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Provide correct Loan ID", ex);
@@ -124,6 +139,14 @@ public class LoanRestController {
         return loanServiceContract.updateStatus();
     }
 
+    @GetMapping("/book/{bookId}/soon-returned")
+    public List<LocalDate> getSoonReturned(@PathVariable Integer bookId){
+        return loanServiceContract.findSoonestEndingLoan(bookId);
+    }
 
+    @GetMapping("/customer/{customerId}/book/{bookId}")
+    public boolean checkIfLoanExistForCustomerIdAndBookId(@PathVariable Integer customerId, @PathVariable Integer bookId){
+        return loanServiceContract.checkIfLoanExistForCustomerIdAndBookId(customerId,bookId);
+    }
 
 }

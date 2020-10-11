@@ -11,6 +11,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,6 +20,7 @@ import java.util.Optional;
 public class LoanServiceImpl implements LoanServiceContract {
 
     private final LoanRepository loanRepository;
+    private static final String NOT_FOUND_MSG = "Loan not found in repository";
 
 
     @Autowired
@@ -26,19 +29,19 @@ public class LoanServiceImpl implements LoanServiceContract {
     }
 
     @Override
-    public List<Loan> findAll() throws LoanNotFoundException {
+    public List<Loan> findAll() {
         List<Loan> loans = loanRepository.findAll();
         if (loans.isEmpty()){
-            throw new LoanNotFoundException("No loan found");
+            throw new LoanNotFoundException(NOT_FOUND_MSG);
         }
         return loans;
     }
 
     @Override
-    public Loan findById(Integer id) throws LoanNotFoundException {
+    public Loan findById(Integer id) {
         Optional<Loan> optionalLoan = loanRepository.findById(id);
         if (!optionalLoan.isPresent()){
-            throw new LoanNotFoundException("Loan not found in repository");
+            throw new LoanNotFoundException(NOT_FOUND_MSG);
         }
         return optionalLoan.get();
     }
@@ -58,10 +61,10 @@ public class LoanServiceImpl implements LoanServiceContract {
     }
 
     @Override
-    public Loan update(Loan loan) throws LoanNotFoundException{
+    public Loan update(Loan loan) {
         Optional<Loan> optionalLoan = loanRepository.findById(loan.getId());
         if (!optionalLoan.isPresent()){
-            throw new LoanNotFoundException("Loan not found in repository");
+            throw new LoanNotFoundException(NOT_FOUND_MSG);
         }
         if (loan.getLoanStatus().equalsIgnoreCase(LoanStatus.CLOSED.getLabel())){
             Loan savedLoan = optionalLoan.get();
@@ -78,10 +81,10 @@ public class LoanServiceImpl implements LoanServiceContract {
     }
 
     @Override
-    public List<Loan> findAllByCustomerId(Integer customerId) throws LoanNotFoundException {
+    public List<Loan> findAllByCustomerId(Integer customerId) {
         List<Loan> loans = loanRepository.findAllByCustomerId(customerId, Sort.by("loanStatus"));
         if (loans.isEmpty()){
-            throw new LoanNotFoundException("Loan not found in repository");
+            throw new LoanNotFoundException(NOT_FOUND_MSG);
         }
         return loans;
     }
@@ -90,17 +93,48 @@ public class LoanServiceImpl implements LoanServiceContract {
     public List<Loan> findDelayLoan() {
         List<Loan> loans = loanRepository.findDelayLoan();
         if (loans.isEmpty()){
-            throw new LoanNotFoundException("Loan not found in repository");
+            throw new LoanNotFoundException(NOT_FOUND_MSG);
         }
         return loans;
     }
 
+    @Override
+    public List<LocalDate> findSoonestEndingLoan(Integer bookId) {
+        List<Loan> loans = loanRepository.findAllByBookId(bookId);
+        List<Loan> ongoingLoans = new ArrayList<>();
+        for (Loan loan : loans){
+            if (!loan.getLoanStatus().equalsIgnoreCase("rendu")){
+                if (loan.isExtend()){
+                    loan.setEndingLoanDate(loan.getExtendLoanDate());
+                }
+                ongoingLoans.add(loan);
+            }
+        }
+
+        ongoingLoans.sort(Comparator.comparing(Loan::getEndingLoanDate));
+        List<LocalDate> localDates = new ArrayList<>();
+        for (Loan loan : ongoingLoans){
+            localDates.add(loan.getEndingLoanDate());
+        }
+        return localDates;
+    }
 
     @Override
-    public Loan extendLoan(Integer id) throws LoanNotFoundException {
+    public boolean checkIfLoanExistForCustomerIdAndBookId(Integer customerId, Integer bookId) {
+       Integer loan = loanRepository.checkIfLoanExistForCustomerIdAndBookId(customerId,bookId);
+       if (loan != 0){
+           return true;
+       } else {
+           return false;
+       }
+    }
+
+
+    @Override
+    public Loan extendLoan(Integer id) {
         Optional<Loan> optionalLoan = loanRepository.findById(id);
         if (!optionalLoan.isPresent()){
-            throw new LoanNotFoundException("Loan not found in repository");
+            throw new LoanNotFoundException(NOT_FOUND_MSG);
         }
         Loan extendLoan = new Loan();
         extendLoan.setId(optionalLoan.get().getId());
@@ -128,10 +162,10 @@ public class LoanServiceImpl implements LoanServiceContract {
     }
 
     @Override
-    public Loan returnLoan(Integer id) throws LoanNotFoundException {
+    public Loan returnLoan(Integer id) {
         Optional<Loan> optionalLoan = loanRepository.findById(id);
         if (!optionalLoan.isPresent()){
-            throw new LoanNotFoundException("Loan not found in repository");
+            throw new LoanNotFoundException(NOT_FOUND_MSG);
         }
         Loan savedLoan = optionalLoan.get();
         savedLoan.setLoanStatus(LoanStatus.CLOSED.getLabel());
