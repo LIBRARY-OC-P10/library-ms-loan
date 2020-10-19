@@ -132,6 +132,13 @@
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.8.5</version>
+				<configuration>
+					<excludes>
+						<exclude>org/mickael/librarymsloan/controller/*.class</exclude>
+						<exclude>org/mickael/librarymsloan/exception/*.class</exclude>
+						<exclude>org/mickael/librarymsloan/security/*.class</exclude>
+					</excludes>
+				</configuration>
 				<executions>
 					<execution>
 						<id>pre-unit-test</id>
