@@ -137,6 +137,7 @@
 						<exclude>org/mickael/librarymsloan/controller/*.class</exclude>
 						<exclude>org/mickael/librarymsloan/exception/*.class</exclude>
 						<exclude>org/mickael/librarymsloan/security/*.class</exclude>
+						<exclude>org/mickael/librarymsloan/utils/*.class</exclude>
 					</excludes>
 				</configuration>
 				<executions>

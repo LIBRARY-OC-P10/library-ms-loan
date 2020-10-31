@@ -94,7 +94,7 @@ public class LoanRestController {
             Loan loan = loanServiceContract.returnLoan(id);
             feignBookProxy.updateLoanCopy(loan.getCopyId(), HandlerToken.formatToken(accessToken));
             //update reservations
-            feignReservationProxy.updateReservation(loan.getBookId(), HandlerToken.formatToken(accessToken));
+            feignReservationProxy.updateDateReservation(loan.getBookId(), HandlerToken.formatToken(accessToken));
 
             return loan;
         } catch (LoanNotFoundException ex){
