@@ -9,7 +9,7 @@
 	</parent>
 	<groupId>org.mickael</groupId>
 	<artifactId>library-ms-loan</artifactId>
-	<version>1.1.1-SNAPSHOT</version>
+	<version>1.2.1-SNAPSHOT</version>
 	<name>library-ms-loan</name>
 	<description>Library webapp for OpenClassrooms Project 10</description>
 
